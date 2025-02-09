@@ -209,9 +209,7 @@ class Application(tk.Tk):
 
     def rechercher_client(self):
         """
-        Recherche un client par sa raison sociale dans le fichier CSV.
-        Si trouvé, affiche les informations du client dans les champs de saisie.
-        Affiche un message si aucun client n'est trouvé.
+        Recherche un client par sa raison sociale ou son nom de représentant dans le fichier CSV.
         """
         recherche = self.entry_recherche.get().strip().upper()
         if not recherche:
@@ -219,32 +217,32 @@ class Application(tk.Tk):
             return
 
         trouve = False
-        with open(CLIENTS_CSV, mode='r', encoding='utf-8') as f:
-            reader = csv.reader(f, delimiter=';')
-            next(reader, None)  # Passer la ligne d'en-tête
-            for row in reader:
-                if len(row) >= 7: # Vérifier que la ligne a assez de colonnes
-                    if row[0] == recherche: # Raison sociale est en première colonne (index 0)
-                        # Remplir les champs avec les données du client trouvé
-                        self.entry_raison_sociale.delete(0, tk.END)
-                        self.entry_raison_sociale.insert(0, row[0])
-                        self.entry_adresse.delete(0, tk.END)
-                        self.entry_adresse.insert(0, row[1])
-                        self.entry_code_postal.delete(0, tk.END)
-                        self.entry_code_postal.insert(0, row[2])
-                        self.entry_telephone.delete(0, tk.END)
-                        self.entry_telephone.insert(0, row[3])
-                        self.entry_siret.delete(0, tk.END)
-                        self.entry_siret.insert(0, row[4])
-                        self.entry_nom_rep.delete(0, tk.END)
-                        self.entry_nom_rep.insert(0, row[5])
-                        self.entry_prenom_rep.delete(0, tk.END)
-                        self.entry_prenom_rep.insert(0, row[6])
-                        trouve = True
-                        break # Sortir de la boucle dès que le client est trouvé
+        try:
+            with open(CLIENTS_CSV, mode='r', encoding='utf-8') as f:
+                reader = csv.reader(f, delimiter=';')
+                next(reader, None)  # Passer la ligne d'en-tête
+                for row in reader:
+                    if len(row) >= 7:
+                        raison_sociale = row[0].upper()
+                        nom_representant = row[5].upper()  # REPRESENTANT_NOM
+                        # Recherche dans raison sociale OU nom du représentant
+                        if recherche in raison_sociale or recherche in nom_representant:
+                            self.nettoyer_champs_client()
+                            self.entry_raison_sociale.insert(0, row[0])
+                            self.entry_adresse.insert(0, row[1])
+                            self.entry_code_postal.insert(0, row[2])
+                            self.entry_telephone.insert(0, row[3])
+                            self.entry_siret.insert(0, row[4])
+                            self.entry_nom_rep.insert(0, row[5])
+                            self.entry_prenom_rep.insert(0, row[6])
+                            trouve = True
+                            break
 
-        if not trouve:
-            messagebox.showinfo("Résultat", f"Aucun client trouvé pour : {recherche}")
+            if not trouve:
+                messagebox.showinfo("Résultat", f"Aucun client trouvé pour : {recherche}")
+
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur lors de la recherche : {str(e)}")
 
 
     ####################################################################
