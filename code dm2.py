@@ -4,29 +4,19 @@ from tkinter import messagebox
 import csv
 import os
 
-########################################################################
-#                              CONSTANTES                              #
-########################################################################
-
+# Les fichiers pour sauver les données
 CLIENTS_CSV = "Clients.csv"
 DEVIS_CSV = "Devis.csv"
 
-# Exemple (simplifié) de densités par matière
-# Vous pouvez adapter et lier la matière à sa densité
+# Les matériaux qu'on peut utiliser
 DENSITES = {
     "Acier": 7.85,
     "Aluminium": 2.70,
     "Cuivre": 8.96
 }
 
-########################################################################
-#                 FONCTIONS DE CALCUL ET DE MANIPULATION CSV           #
-########################################################################
-
 def verifier_ou_creer_fichier(nom_fichier, en_tetes):
-    """
-    Vérifie si le fichier CSV existe, si non, le crée avec les en-têtes spécifiés.
-    """
+    # Crée un nouveau fichier s'il n'existe pas déjà
     if not os.path.exists(nom_fichier):
         with open(nom_fichier, mode='w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f, delimiter=';')
@@ -34,12 +24,9 @@ def verifier_ou_creer_fichier(nom_fichier, en_tetes):
 
 def calculer_prix_devis(matiere, longueur, largeur, epaisseur,
                         forme, prix_au_kg, cout_lame, cout_avance, coeff_forme):
-    """
-    Fonction de calcul du prix de vente d'un devis, inspirée du pseudocode AlgoBox.
-    ----------------------------------------------------------------------------
-    Vous pouvez modifier la formule pour correspondre à vos besoins exacts.
-    """
+    # Calcule le prix total pour le devis
     try:
+        # Convertit les textes en nombres
         longueur = float(longueur)
         largeur = float(largeur)
         epaisseur = float(epaisseur)
@@ -48,40 +35,36 @@ def calculer_prix_devis(matiere, longueur, largeur, epaisseur,
         cout_avance = float(cout_avance)
         coeff_forme = float(coeff_forme)
     except ValueError:
-        # Si un champ n'est pas numérique, on renvoie un prix négatif pour signaler l'erreur
+        # Retourne -1 si erreur dans les nombres
         return -1.0
 
-    # Récupération de la densité en fonction de la matière
+    # Trouve la densité du matériau
     if matiere in DENSITES:
         densite = DENSITES[matiere]
     else:
-        # Si la matière n'est pas dans le dictionnaire, on prend une densité par défaut
+        # Met 1.0 si on ne connait pas le matériau
         densite = 1.0
 
-    # Calcul du volume (cm3) -> conversion en kg : densite (g/cm3) => densite * volume / 1000
+    # Calcul du volume et du poids
     volume_cm3 = longueur * largeur * epaisseur
     poids_kg = densite * volume_cm3 / 1000.0
 
-    # Exemple de calcul simplifié
+    # Calcul du prix final
     prix_matiere = poids_kg * prix_au_kg
     prix_main_oeuvre = (cout_lame + cout_avance) * coeff_forme
 
-    # Prix total
+    # Arrondit le prix total
     prix_total = prix_matiere + prix_main_oeuvre
     return round(prix_total, 2)
 
-
-########################################################################
-#                          CLASSE APPLICATION                          #
-########################################################################
-
+# Programme principal pour gérer les clients et devis
 class Application(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Outil de Gestion des Clients et Devis")
         self.geometry("900x500")
 
-        # Vérification/Création des fichiers CSV
+        # Crée les fichiers s'ils n'existent pas
         verifier_ou_creer_fichier(CLIENTS_CSV,
             ["RAISON_SOCIALE", "ADRESSE", "CODE_POSTAL", "TELEPHONE", "SIRET", "REPRESENTANT_NOM", "REPRESENTANT_PRENOM"]
         )
@@ -90,25 +73,24 @@ class Application(tk.Tk):
              "PRIX_AU_KG", "COUT_LAME", "COUT_AVANCE", "COEFF_FORME", "PRIX_CALCULE"]
         )
 
-        # Onglets via Notebook
+        # Création des onglets
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(expand=True, fill="both")
 
-        # Frame pour Clients
+        # Page des clients
         self.frame_clients = ttk.Frame(self.notebook)
         self.notebook.add(self.frame_clients, text="Clients")
 
-        # Frame pour Devis
+        # Page des devis
         self.frame_devis = ttk.Frame(self.notebook)
         self.notebook.add(self.frame_devis, text="Devis")
 
-        # Construction des onglets
         self._build_clients_tab()
         self._build_devis_tab()
 
-    ####################################################################
+  
     #                       ONGLET CLIENTS                             #
-    ####################################################################
+  
 
     def _build_clients_tab(self):
         """Construction de l'onglet 'Clients'."""
@@ -245,9 +227,9 @@ class Application(tk.Tk):
             messagebox.showerror("Erreur", f"Erreur lors de la recherche : {str(e)}")
 
 
-    ####################################################################
+   
     #                       ONGLET DEVIS                               #
-    ####################################################################
+    
 
     def _build_devis_tab(self):
         """Construction de l'onglet 'Devis'."""
@@ -404,9 +386,7 @@ class Application(tk.Tk):
         self.label_prix_resultat.config(text=f"Prix du Devis : {prix} €")
 
 
-########################################################################
-#                               MAIN                                   #
-########################################################################
+
 
 if __name__ == "__main__":
     app = Application()
